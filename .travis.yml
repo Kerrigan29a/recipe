@@ -7,6 +7,9 @@ os:
 # Container-based infrastructure
 sudo: false
 
+before_install:
+  - go get -v golang.org/x/tools/cmd/stringer
+
 script:
   - go run cmd/recipe/main.go -v examples/basic.json
   - go run cmd/recipe/main.go -v examples/basic.toml

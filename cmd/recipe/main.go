@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"runtime"
-	"github.com/kerrigan29a/recipe"
+	"github.com/Kerrigan29a/recipe"
 	"os"
 	"fmt"
 )
