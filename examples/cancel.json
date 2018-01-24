@@ -20,7 +20,6 @@
     "t3": {
       "deps": [],
       "cmd": "python -c \"import time\ntime.sleep(2)\nprint 'Cancelling'\nexit(1)\"",
-      "allow_failure": false
     }
   }
 }
