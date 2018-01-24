@@ -3,7 +3,7 @@ main = "t1"
 interp = ['python', '-c', '{cmd}']
 
 [tasks.t1]
-interp = ['/bin/sh', '-c', 'exec {cmd}']
+interp = []
 deps = ["t2", "t3", "t4", "t5",]
 cmd = 'echo All done!!!'
 

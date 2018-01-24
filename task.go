@@ -69,12 +69,19 @@ func replaceCmd(parts []string, spell string) []string {
 func (t *Task) composeInterpreterCmd(spell string, r *Recipe) []string {
 	// Check task config
 	if parts := t.Interpreter(); parts != nil {
+		if len(parts) == 0 {
+			goto defaultConfig
+		}
 		return replaceCmd(parts, spell)
 	}
 	// Check recipe config
 	if parts := r.Interpreter(); parts != nil {
+		if len(parts) == 0 {
+			goto defaultConfig
+		}
 		return replaceCmd(parts, spell)
 	}
+defaultConfig:
 	// Default config
 	if runtime.GOOS == "windows" {
 		return []string{"cmd", "/c", spell}

@@ -5,7 +5,7 @@
   "tasks": {
     "t1": {
       "deps": ["t2", "t3", "t4", "t5"],
-      "interp": ["/bin/sh", "-c", "exec {cmd}"],
+      "interp": [],
       "cmd": "echo All done!!!",
     },
     "t2": {
