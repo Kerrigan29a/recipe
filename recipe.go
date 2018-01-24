@@ -108,8 +108,8 @@ func (r *Recipe) walkTasks(name string) {
 func (r *Recipe) run(numWorkers uint) error {
 	r.logger.Info("Main: %s", r.Main)
 	r.logger.Info("Workers: %d", numWorkers)
-	resultCh := make(chan *result)
-	namedTaskCh := make(chan *namedTask)
+	resultCh := make(chan *result, numWorkers)
+	namedTaskCh := make(chan *namedTask, len(r.Tasks))
 	doneCh := make(chan error)
 	dispatchAgainCh := make(chan bool)
 	go r.producer(namedTaskCh, dispatchAgainCh)
