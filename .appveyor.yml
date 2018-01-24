@@ -18,7 +18,6 @@ build_script:
   - go get -v golang.org/x/tools/cmd/stringer
   - go run cmd/recipe/main.go -v -m build_release examples/bootstrap.toml
 
-
 test_script:
   - go run cmd/recipe/main.go -v examples/basic.json
   - go run cmd/recipe/main.go -v examples/basic.toml
