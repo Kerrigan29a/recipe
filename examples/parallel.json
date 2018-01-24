@@ -1,0 +1,24 @@
+{
+  "main": "t1",
+  "env": null,
+  "interp": ["python", "-c"],
+  "tasks": {
+    "t1": {
+      "deps": ["t2", "t3", "t4", "t5"],
+      "interp": ["/bin/sh", "-c"],
+      "cmd": "exec echo All done!!!",
+    },
+    "t2": {
+      "cmd": "import time\nfor i in range(10):\n\ttime.sleep(0.5)\n\tprint '[t2] {}: hi world'.format(i)\n",
+    },
+    "t3": {
+      "cmd": "import time\nfor i in range(10):\n\ttime.sleep(0.5)\n\tprint '[t3] {}: hi world'.format(i)\n",
+    },
+    "t4": {
+      "cmd": "import time\nfor i in range(10):\n\ttime.sleep(0.5)\n\tprint '[t4] {}: hi world'.format(i)\n",
+    },
+    "t5": {
+      "cmd": "import time\nfor i in range(10):\n\ttime.sleep(0.5)\n\tprint '[t5] {}: hi world'.format(i)\n",
+    }
+  }
+}

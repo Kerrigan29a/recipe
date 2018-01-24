@@ -1,0 +1,83 @@
+{
+  "main": "build_debug",
+  "env": {
+    "GOARCH": "amd64"
+  },
+  "tasks": {
+    "build_debug": {
+      "deps": null,
+      "env": null,
+      "cmd": "go build -race ./cmd/recipe/",
+      "stdout": "",
+      "stderr": "",
+      "allow_failure": false,
+      "state": 0
+    },
+    "build_release": {
+      "deps": [
+        "build_release_windows",
+        "build_release_darwin",
+        "build_release_linux"
+      ],
+      "env": null,
+      "cmd": "",
+      "stdout": "",
+      "stderr": "",
+      "allow_failure": false,
+      "state": 0
+    },
+    "build_release_darwin": {
+      "deps": null,
+      "env": {
+        "GOOS": "darwin"
+      },
+      "cmd": "go build -o recipe.$GOOS ./cmd/recipe/",
+      "stdout": "",
+      "stderr": "",
+      "allow_failure": false,
+      "state": 0
+    },
+    "build_release_linux": {
+      "deps": null,
+      "env": {
+        "GOOS": "linux"
+      },
+      "cmd": "go build -o recipe.$GOOS ./cmd/recipe/",
+      "stdout": "",
+      "stderr": "",
+      "allow_failure": false,
+      "state": 0
+    },
+    "build_release_windows": {
+      "deps": null,
+      "env": {
+        "GOOS": "windows"
+      },
+      "cmd": "go build ./cmd/recipe/",
+      "stdout": "",
+      "stderr": "",
+      "allow_failure": false,
+      "state": 0
+    },
+    "clean": {
+      "deps": [
+        "clean_more"
+      ],
+      "env": null,
+      "cmd": "go clean -i",
+      "stdout": "",
+      "stderr": "",
+      "allow_failure": false,
+      "state": 0
+    },
+    "clean_more": {
+      "deps": null,
+      "env": null,
+      "cmd": "rm recipe recipe.exe recipe.linux recipe.darwin",
+      "stdout": "",
+      "stderr": "",
+      "allow_failure": true,
+      "state": 0
+    }
+  }
+}
