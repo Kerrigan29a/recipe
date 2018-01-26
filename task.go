@@ -82,7 +82,7 @@ func (t *Task) composeInterpreterCmd(spell string, r *Recipe) []string {
 		return replaceCmd(parts, spell)
 	}
 defaultConfig:
-	// Default config
+// Default config
 	if runtime.GOOS == "windows" {
 		return []string{"cmd", "/c", spell}
 	}
@@ -92,6 +92,10 @@ defaultConfig:
 func (t *Task) Execute(ctx context.Context, r *Recipe) error {
 	t.mu.RLock()
 	defer t.mu.RUnlock()
+
+	if t.Cmd == "" {
+		return nil
+	}
 
 	parts := t.composeInterpreterCmd(t.Cmd, r)
 	env := t.composeEnv(r)

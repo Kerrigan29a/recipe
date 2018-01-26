@@ -35,28 +35,28 @@ func Open(path string, logger *Logger) (*Recipe, error) {
 	var r Recipe
 	f, err := os.Open(path)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("(%s) %s", path, err.Error())
 	}
 
 	ext := filepath.Ext(path)
 	if ext == ".json" {
 		err = json.NewDecoder(JsonConfigReader.New(f)).Decode(&r)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("(%s) %s", path, err.Error())
 		}
 	} else if ext == ".toml" {
 		err = toml.NewDecoder(f).Decode(&r)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("(%s) %s", path, err.Error())
 		}
 	} else {
 		// TODO: Implement a modeline mechanism? // -*- coding: utf-8; mode: json; -*-
-		return nil, fmt.Errorf("Unknown filetype with extension: %s", ext)
+		return nil, fmt.Errorf("(%s) Unknown filetype", path)
 	}
 	r.logger = logger
 	r.logger.Debug("Recipe: %s", r.PrettyString())
 	if err := r.check(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("(%s) %s", path, err.Error())
 	}
 	return &r, nil
 }
