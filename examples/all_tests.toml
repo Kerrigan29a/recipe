@@ -1,0 +1,44 @@
+main = "all"
+
+interp = ['go', 'run', 'cmd/recipe/main.go', '{cmd}']
+
+[tasks.all]
+deps = ["basic", "bootstrap", "cancel", "parallel"]
+
+[tasks.basic]
+deps = ["basic_json", "basic_toml"]
+
+[tasks.bootstrap]
+deps = ["bootstrap_json", "bootstrap_toml"]
+
+[tasks.cancel]
+deps = ["cancel_json", "cancel_toml"]
+
+[tasks.parallel]
+deps = ["parallel_json", "parallel_toml"]
+
+[tasks.basic_json]
+cmd = "examples/basic.json"
+
+[tasks.basic_toml]
+cmd = "examples/basic.toml"
+
+[tasks.bootstrap_json]
+cmd = "examples/bootstrap.json"
+
+[tasks.bootstrap_toml]
+cmd = "examples/bootstrap.toml"
+
+[tasks.cancel_json]
+cmd = "examples/cancel.json"
+allow_failure = true
+
+[tasks.cancel_toml]
+cmd = "examples/cancel.toml"
+allow_failure = true
+
+[tasks.parallel_json]
+cmd = "examples/parallel.json"
+
+[tasks.parallel_toml]
+cmd = "examples/parallel.toml"
