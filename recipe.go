@@ -86,30 +86,39 @@ func (r *Recipe) check() error {
 }
 
 func (r *Recipe) RunMain(numWorkers uint) error {
-	r.walkTasks(r.Main)
 	return r.run(numWorkers)
 }
 
 func (r *Recipe) RunTask(task string, numWorkers uint) error {
 	r.Main = task
-	r.walkTasks(r.Main)
 	return r.run(numWorkers)
 }
 
-func (r *Recipe) walkTasks(name string) {
+func (r *Recipe) enableTasks(name string) {
 	t := r.Tasks[name]
 	t.SetEnabled()
 	r.logger.Debug("Enabled: %s", name)
 	for _, n := range t.Deps {
-		r.walkTasks(n)
+		r.enableTasks(n)
 	}
+}
+
+func (r *Recipe) countEnabled() int{
+	i := 0
+	for _, t := range r.Tasks {
+		if t.IsEnabled() {
+			i++
+		}
+	}
+	return i
 }
 
 func (r *Recipe) run(numWorkers uint) error {
 	r.logger.Info("Main: %s", r.Main)
 	r.logger.Info("Workers: %d", numWorkers)
+	r.enableTasks(r.Main)
 	resultCh := make(chan *result, numWorkers)
-	namedTaskCh := make(chan *namedTask, len(r.Tasks))
+	namedTaskCh := make(chan *namedTask, r.countEnabled())
 	doneCh := make(chan error)
 	dispatchAgainCh := make(chan bool)
 	go r.producer(namedTaskCh, dispatchAgainCh)
