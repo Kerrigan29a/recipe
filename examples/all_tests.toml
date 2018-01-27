@@ -3,7 +3,7 @@ main = "all"
 interp = ['go', 'run', 'cmd/recipe/main.go', '{cmd}']
 
 [tasks.all]
-deps = ["basic", "bootstrap", "cancel", "parallel"]
+deps = ["basic", "bootstrap", "cancel", "parallel", "bootstrap_clean"]
 
 [tasks.basic]
 deps = ["basic_json", "basic_toml"]
@@ -16,6 +16,9 @@ deps = ["cancel_json", "cancel_toml"]
 
 [tasks.parallel]
 deps = ["parallel_json", "parallel_toml"]
+
+[tasks.bootstrap_clean]
+deps = ["bootstrap_clean_json", "bootstrap_clean_toml"]
 
 [tasks.basic_json]
 cmd = "examples/basic.json"
@@ -42,3 +45,11 @@ cmd = "examples/parallel.json"
 
 [tasks.parallel_toml]
 cmd = "examples/parallel.toml"
+
+[tasks.bootstrap_clean_json]
+interp = ['go', 'run', 'cmd/recipe/main.go', '-m', 'clean', '{cmd}']
+cmd = "examples/bootstrap.json"
+
+[tasks.bootstrap_clean_toml]
+interp = ['go', 'run', 'cmd/recipe/main.go', '-m', 'clean', '{cmd}']
+cmd = "examples/bootstrap.toml"
