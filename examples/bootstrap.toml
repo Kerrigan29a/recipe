@@ -1,0 +1,30 @@
+main = "build_debug"
+
+[env]
+GOARCH = "amd64"
+
+[tasks.build_debug]
+cmd = 'go build -race -ldflags "-X main.version=`cat VERSION`+`date -u +%Y%m%d.%H%M%S`" ./cmd/recipe/'
+
+[tasks.build_release]
+deps = ['build_release_windows','build_release_darwin','build_release_linux']
+
+[tasks.build_release_darwin]
+env = {GOOS = 'darwin'}
+cmd = 'go build -ldflags "-X main.version=`cat VERSION`+`date -u +%Y%m%d.%H%M%S`" -o recipe.$GOOS ./cmd/recipe/'
+
+[tasks.build_release_linux]
+env = {GOOS = 'linux'}
+cmd = 'go build -ldflags "-X main.version=`cat VERSION`+`date -u +%Y%m%d.%H%M%S`" -o recipe.$GOOS ./cmd/recipe/'
+
+[tasks.build_release_windows]
+env = {GOOS = 'windows'}
+cmd = 'go build -ldflags "-X main.version=`cat VERSION`+`date -u +%Y%m%d.%H%M%S`" ./cmd/recipe/'
+
+[tasks.clean]
+deps = ['clean_more']
+cmd = 'go clean -i'
+
+[tasks.clean_more]
+cmd = 'rm recipe recipe.exe recipe.linux recipe.darwin'
+allow_failure = true

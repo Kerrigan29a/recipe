@@ -1,0 +1,25 @@
+{
+  "main": "t1",
+  "tasks": {
+    /* Task 1 */
+    "t1": {
+      "deps": [
+        "t2",
+        "t3"
+      ],
+      "cmd": "echo All done!!!",
+      "stdout": "",
+      "stderr": ""
+    },
+    /* Task 2 */
+    "t2": {
+      "deps": [],
+      "cmd": "python -c \"import time\nfor i in range(10):\n\ttime.sleep(0.5)\n\tprint '{}: hi world'.format(i)\n\""
+    },
+    /* Task 3 */
+    "t3": {
+      "deps": [],
+      "cmd": "python -c \"import time\ntime.sleep(2)\nprint 'Cancelling'\nexit(1)\"",
+    }
+  }
+}

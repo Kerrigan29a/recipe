@@ -1,0 +1,21 @@
+language: go
+os:
+- linux
+sudo: false
+before_install:
+- go get -v golang.org/x/tools/cmd/stringer
+script:
+- go run cmd/recipe/main.go -v -w 1 examples/all_tests.toml
+- go run cmd/recipe/main.go -v -m build_release examples/bootstrap.toml
+deploy:
+  provider: releases
+  api_key:
+    secure: bqcABEmQFlJL0XXs2V1SHaczwMg1flrRuBSHaEF0ZW6CGraKGURZCx1yhcZdC3OAIxpq33k/3r2+pZb2FmqHB3lqpQB8B3+MFgWGrmEVjvpNpCyvajR78TVQj/5vyb6zgxQ8Mng0ZcoVI5UeFodHh0Y3sAdw/1hFvcRjjftP2c8E6tzrSSif1QTg3T9FlrWu+XDfgkh3JtdC5jq/UvkU4aa8S1kr7jBMwQYwswk1wgHHIb2nn9nr6SLVxf88UrhlcNugkEXNhbhDeJR0PT7wNm5oi/z/QV5fz7uyBtQ7XEO2T/2JDwWBuZGx7SxZmA43rAbTLiFVY1scyC3nFpJtm4xe2EkWqt6p61VJ/mO36gK4Jkl9l83TgO/t+Ycbab4ToSflePRl3kWwzfoQIhkfoNn6n8MmIhm9Vor8b8wrWDQ7meB3jDoSrC54dpzuYc5WWdSp/j+2Or7YzN4n3/HSJgqS955PCqeXZbApJRAYX4BmtbZlwVDnMhvqLPhP+h5WMkFWNtsN+ZeKKhUfruCPfkj/djkqSGKQaqLtFGxrcuDIhkjRx1n3RLau0L209P+/9vo3sHY3AJNB3Elb+T/Hp2VlIW03wOX+4kiV5mdiLzqW5zBBeys/uqximMACf/cMFy+80/Zdw+30qX52FGZCsmEUN57yUtNITnV80tegbPo=
+  file:
+    - recipe.exe
+    - recipe.darwin
+    - recipe.linux
+    - examples
+  skip_cleanup: true
+  on:
+    tags: true

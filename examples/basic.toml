@@ -1,0 +1,19 @@
+main = "t1"
+
+[tasks.t1]
+deps = ["t2", "t3"]
+cmd = "echo t1"
+stdout = ""
+stderr = ""
+
+[tasks.t2]
+deps = []
+cmd = "echo t2"
+stdout = ""
+stderr = ""
+
+[tasks.t3]
+deps = []
+cmd = "echo t3"
+stdout = ""
+stderr = ""

@@ -1,0 +1,22 @@
+version: "{build}"
+
+platform: x64
+
+clone_folder: c:\gopath\src\github.com\Kerrigan29a\recipe
+
+environment:
+  GOPATH: c:\gopath
+
+install:
+  - echo %PATH%
+  - echo %GOPATH%
+  - set PATH=%GOPATH%\bin;c:\go\bin;%PATH%
+  - go version
+  - go env
+
+build_script:
+  - go get -v golang.org/x/tools/cmd/stringer
+  - go run cmd/recipe/main.go -v -m build_release examples/bootstrap.toml
+
+test_script:
+  - go run cmd/recipe/main.go -v -w 1 examples/all_tests.toml
