@@ -5,3 +5,7 @@
 
 
 Task scheduler
+
+# Documentation
+
+Documentation is available at [godoc](https://godoc.org/github.com/Kerrigan29a/recipe)
