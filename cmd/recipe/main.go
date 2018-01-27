@@ -8,6 +8,8 @@ import (
 	"fmt"
 )
 
+var version string
+
 func parseArgs(task *string, numWorkers *uint, level *recipe.LoggerLevel) []string {
 	var verbose, quiet bool
 	flag.UintVar(numWorkers, "w", uint(runtime.NumCPU()), "Amount of workers")
@@ -18,12 +20,12 @@ func parseArgs(task *string, numWorkers *uint, level *recipe.LoggerLevel) []stri
 	paths := flag.Args()
 	if len(paths) <= 0 {
 		fmt.Fprintf(os.Stderr, "Must supply a recipe file\n\n")
-		flag.Usage()
+		printUsage()
 		os.Exit(1)
 	}
 	if verbose && quiet {
 		fmt.Fprintf(os.Stderr, "Only can select verbose or quiet mode, but not both\n\n")
-		flag.Usage()
+		printUsage()
 		os.Exit(1)
 	}
 	if verbose {
@@ -36,6 +38,12 @@ func parseArgs(task *string, numWorkers *uint, level *recipe.LoggerLevel) []stri
 	return paths
 }
 
+func printUsage() {
+	flag.Usage()
+	fmt.Println("")
+	fmt.Printf("Version: %s\n", version)
+}
+
 func main() {
 	var task string
 	var numWorkers uint
@@ -45,6 +53,7 @@ func main() {
 	logger.Level = level
 	recipeLogger := recipe.NewLogger("[Recipe] ")
 	recipeLogger.Level = level
+	logger.Info("Version: %s", version)
 	for _, path := range paths {
 		recipe, err := recipe.Open(path, recipeLogger)
 		if err != nil {
