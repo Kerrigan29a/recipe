@@ -18,17 +18,20 @@
     "build_release_darwin": {
       "env": {
         "GOOS": "darwin"
-      }, "cmd": "go build -ldflags \"-X main.version=`cat VERSION`+`date -u +%Y%m%d.%H%M%S`\" -o recipe.$GOOS ./cmd/recipe/",
+      },
+      "cmd": "go build -ldflags \"-X main.version=`cat VERSION`+`date -u +%Y%m%d.%H%M%S`\" -o recipe.$GOOS ./cmd/recipe/",
     },
     "build_release_linux": {
       "env": {
         "GOOS": "linux"
-      }, "cmd": "go build -ldflags \"-X main.version=`cat VERSION`+`date -u +%Y%m%d.%H%M%S`\" -o recipe.$GOOS ./cmd/recipe/",
+      },
+      "cmd": "go build -ldflags \"-X main.version=`cat VERSION`+`date -u +%Y%m%d.%H%M%S`\" -o recipe.$GOOS ./cmd/recipe/",
     },
     "build_release_windows": {
       "env": {
         "GOOS": "windows"
-      }, "cmd": "go build -ldflags \"-X main.version=`cat VERSION`+`date -u +%Y%m%d.%H%M%S`\" ./cmd/recipe/",
+      },
+      "cmd": "go build -ldflags \"-X main.version=`cat VERSION`+`date -u +%Y%m%d.%H%M%S`\" ./cmd/recipe/",
     },
     "clean": {
       "deps": [
