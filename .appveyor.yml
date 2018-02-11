@@ -16,7 +16,7 @@ install:
 
 build_script:
   - go get -v golang.org/x/tools/cmd/stringer
-  - go run cmd/recipe/main.go -v -m build_release examples/bootstrap.toml
+  - go run cmd/recipe/main.go -v -m build_release examples/bootstrap_windows.toml
 
 test_script:
   - go run cmd/recipe/main.go -v -w 1 examples/all_tests.toml
