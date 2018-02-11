@@ -5,7 +5,10 @@
 [![GoDoc](https://godoc.org/github.com/Kerrigan29a/recipe?status.svg)](https://godoc.org/github.com/Kerrigan29a/recipe)
 
 
-Task scheduler
+Task scheduler able to run tasks in parallel.
+Each task is scheduled to run when all their dependencies have been satisfied previously.
+The configuration files can be definded in [JSON](https://json.org/) or [TOML](https://github.com/toml-lang/toml) as you
+can see in [the examples folder](examples)
 
 # Documentation
 
