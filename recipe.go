@@ -1,14 +1,14 @@
 package recipe
 
 import (
+	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
-	"context"
 	"github.com/DisposaBoy/JsonConfigReader"
-	"os"
 	"github.com/pelletier/go-toml"
+	"os"
 	"path/filepath"
-	"bytes"
 	"sync"
 )
 
@@ -110,7 +110,7 @@ func (r *Recipe) enableTasks(name string) error {
 	return nil
 }
 
-func (r *Recipe) countEnabled() int{
+func (r *Recipe) countEnabled() int {
 	i := 0
 	for _, t := range r.Tasks {
 		if t.IsEnabled() {
@@ -275,7 +275,7 @@ func (r *Recipe) string(indent bool) string {
 
 /*
 * Task Iterator
-*/
+ */
 
 type TaskIterator struct {
 	namedTasks []*namedTask
@@ -293,7 +293,7 @@ func (it *TaskIterator) next() (string, *Task) {
 
 /*
 * Error
-*/
+ */
 
 type Error struct {
 	n string

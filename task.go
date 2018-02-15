@@ -3,21 +3,21 @@
 package recipe
 
 import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"fmt"
 	"os"
 	"os/exec"
-	"context"
-	"sync"
-	"encoding/json"
-	"bytes"
 	"runtime"
 	"strings"
-	"fmt"
+	"sync"
 )
 
 /***
 * Sources:
 *  - https://blog.kowalczyk.info/article/wOYk/advanced-command-execution-in-go-with-osexec.html
-*/
+ */
 
 type TaskState int
 
@@ -45,7 +45,7 @@ type Task struct {
 
 /***
 * Task
-*/
+ */
 
 func (t *Task) composeEnv(r *Recipe) []string {
 	newEnv := os.Environ()
@@ -82,7 +82,7 @@ func (t *Task) composeInterpreterCmd(spell string, r *Recipe) []string {
 		return replaceCmd(parts, spell)
 	}
 defaultConfig:
-// Default config
+	// Default config
 	if runtime.GOOS == "windows" {
 		return []string{"cmd", "/c", spell}
 	}

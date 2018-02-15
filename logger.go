@@ -2,10 +2,10 @@
 package recipe
 
 import (
-	"log"
-	"os"
 	"fmt"
 	"github.com/fatih/color"
+	"log"
+	"os"
 )
 
 type LoggerLevel int
@@ -19,13 +19,13 @@ const (
 )
 
 type Logger struct {
-	l *log.Logger
+	l     *log.Logger
 	Level LoggerLevel
 }
 
 func NewLogger(prefix string) *Logger {
-	l := log.New(os.Stderr, color.HiWhiteString(prefix), log.LstdFlags)//|log.Lshortfile)
-	return &Logger{l:l, Level:InfoL}
+	l := log.New(os.Stderr, color.HiWhiteString(prefix), log.LstdFlags) //|log.Lshortfile)
+	return &Logger{l: l, Level: InfoL}
 }
 
 func (l *Logger) Debug(format string, v ...interface{}) {
@@ -53,6 +53,6 @@ func (l *Logger) Error(format string, v ...interface{}) {
 }
 
 func (l *Logger) Fatal(v ...interface{}) {
-	l.l.Output(2, fmt.Sprintf(color.MagentaString("(F): ") + fmt.Sprint(v...)))
+	l.l.Output(2, fmt.Sprintf(color.MagentaString("(F): ")+fmt.Sprint(v...)))
 	os.Exit(1)
 }

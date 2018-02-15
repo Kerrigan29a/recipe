@@ -2,10 +2,10 @@ package main
 
 import (
 	"flag"
-	"runtime"
+	"fmt"
 	"github.com/Kerrigan29a/recipe"
 	"os"
-	"fmt"
+	"runtime"
 )
 
 var version string
