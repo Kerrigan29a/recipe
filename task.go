@@ -44,8 +44,81 @@ type Task struct {
 }
 
 /***
-* Task
+ * Task
  */
+
+/*
+
+// NOTE: This snippet shows how to reset unmarshaled structs to have different default values
+// WARNING: At this momment is not working with TOML due to a go-toml limitation: https://github.com/pelletier/go-toml/blob/master/marshal.go#L318
+
+// Used to avoid recursion in UnmarshalJSON below.
+type task Task
+
+func (t *task) reset() {
+	t.Deps = make([]string, 0)
+	t.Env = make(map[string]string, 0)
+	t.Interp = make([]string, 0)
+	t.Cmd = ""
+	t.Stdout = ""
+	t.Stderr = ""
+	t.AllowFailure = false
+	t.State = Disabled
+}
+
+func (t *Task) UnmarshalJSON(b []byte) error {
+	fmt.Printf("DEBUG TASK UnmarshalJSON\n")
+
+	newT := task{}
+	newT.reset()
+
+	err := json.Unmarshal(b, &newT)
+	if err != nil {
+		return err
+	}
+
+	t.Deps = newT.Deps
+	t.Env = newT.Env
+	t.Interp = newT.Interp
+	t.Cmd = newT.Cmd
+	t.Stdout = newT.Stdout
+	t.Stderr = newT.Stderr
+	t.AllowFailure = newT.AllowFailure
+	t.State = newT.State
+	t.cancel = newT.cancel
+	t.mu = newT.mu
+
+	fmt.Printf("DEBUG task = %s\n", t)
+	return nil
+}
+
+func (t *Task) UnmarshalTOML(b []byte) error {
+	fmt.Printf("DEBUG TASK UnmarshalTOML\n")
+
+	newT := task{}
+	newT.reset()
+
+	err := toml.Unmarshal(b, &newT)
+	if err != nil {
+		return err
+	}
+
+	t.Deps = newT.Deps
+	t.Env = newT.Env
+	t.Interp = newT.Interp
+	t.Cmd = newT.Cmd
+	t.Stdout = newT.Stdout
+	t.Stderr = newT.Stderr
+	t.AllowFailure = newT.AllowFailure
+	t.State = newT.State
+	t.cancel = newT.cancel
+	t.mu = newT.mu
+
+	fmt.Printf("DEBUG task = %s\n", t)
+	return nil
+}
+
+*/
 
 func (t *Task) composeEnv(r *Recipe) []string {
 	newEnv := os.Environ()

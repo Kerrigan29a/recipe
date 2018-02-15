@@ -274,7 +274,7 @@ func (r *Recipe) string(indent bool) string {
 }
 
 /*
-* Task Iterator
+ * Task Iterator
  */
 
 type TaskIterator struct {
@@ -292,7 +292,7 @@ func (it *TaskIterator) next() (string, *Task) {
 }
 
 /*
-* Error
+ * Error
  */
 
 type Error struct {
