@@ -7,17 +7,19 @@ stdout = ""
 stderr = ""
 
 [tasks.t2]
-cmd = '''python -c "
+interp = ['python', '-c', '{cmd}']
+cmd = '''
 import time
 for i in range(10):
     time.sleep(0.5)
     print '{}: hi world'.format(i)
-"'''
+'''
 
 [tasks.t3]
-cmd = '''python -c "
+interp = ['python', '-c', '{cmd}']
+cmd = '''
 import time
 time.sleep(2)
 print 'Cancelling'
 exit(1)
-"'''
+'''

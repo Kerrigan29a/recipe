@@ -15,7 +15,6 @@ deploy:
     - recipe.exe
     - recipe.darwin
     - recipe.linux
-    - examples
   skip_cleanup: true
   on:
     tags: true

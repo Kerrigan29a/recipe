@@ -3,21 +3,21 @@
 package recipe
 
 import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"fmt"
 	"os"
 	"os/exec"
-	"errors"
-	"context"
-	"sync"
-	"encoding/json"
-	"bytes"
 	"runtime"
 	"strings"
+	"sync"
 )
 
 /***
 * Sources:
 *  - https://blog.kowalczyk.info/article/wOYk/advanced-command-execution-in-go-with-osexec.html
-*/
+ */
 
 type TaskState int
 
@@ -44,7 +44,80 @@ type Task struct {
 }
 
 /***
-* Task
+ * Task
+ */
+
+/*
+
+// NOTE: This snippet shows how to reset unmarshaled structs to have different default values
+// WARNING: At this momment is not working with TOML due to a go-toml limitation: https://github.com/pelletier/go-toml/blob/master/marshal.go#L318
+
+// Used to avoid recursion in UnmarshalJSON below.
+type task Task
+
+func (t *task) reset() {
+	t.Deps = make([]string, 0)
+	t.Env = make(map[string]string, 0)
+	t.Interp = make([]string, 0)
+	t.Cmd = ""
+	t.Stdout = ""
+	t.Stderr = ""
+	t.AllowFailure = false
+	t.State = Disabled
+}
+
+func (t *Task) UnmarshalJSON(b []byte) error {
+	fmt.Printf("DEBUG TASK UnmarshalJSON\n")
+
+	newT := task{}
+	newT.reset()
+
+	err := json.Unmarshal(b, &newT)
+	if err != nil {
+		return err
+	}
+
+	t.Deps = newT.Deps
+	t.Env = newT.Env
+	t.Interp = newT.Interp
+	t.Cmd = newT.Cmd
+	t.Stdout = newT.Stdout
+	t.Stderr = newT.Stderr
+	t.AllowFailure = newT.AllowFailure
+	t.State = newT.State
+	t.cancel = newT.cancel
+	t.mu = newT.mu
+
+	fmt.Printf("DEBUG task = %s\n", t)
+	return nil
+}
+
+func (t *Task) UnmarshalTOML(b []byte) error {
+	fmt.Printf("DEBUG TASK UnmarshalTOML\n")
+
+	newT := task{}
+	newT.reset()
+
+	err := toml.Unmarshal(b, &newT)
+	if err != nil {
+		return err
+	}
+
+	t.Deps = newT.Deps
+	t.Env = newT.Env
+	t.Interp = newT.Interp
+	t.Cmd = newT.Cmd
+	t.Stdout = newT.Stdout
+	t.Stderr = newT.Stderr
+	t.AllowFailure = newT.AllowFailure
+	t.State = newT.State
+	t.cancel = newT.cancel
+	t.mu = newT.mu
+
+	fmt.Printf("DEBUG task = %s\n", t)
+	return nil
+}
+
 */
 
 func (t *Task) composeEnv(r *Recipe) []string {
@@ -82,7 +155,7 @@ func (t *Task) composeInterpreterCmd(spell string, r *Recipe) []string {
 		return replaceCmd(parts, spell)
 	}
 defaultConfig:
-// Default config
+	// Default config
 	if runtime.GOOS == "windows" {
 		return []string{"cmd", "/c", spell}
 	}
@@ -137,13 +210,27 @@ func (t *Task) Execute(ctx context.Context, r *Recipe) error {
 	return nil
 }
 
-func (t *Task) SetEnabled() {
+func (t *Task) SetDisabled() {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	t.State = Disabled
+}
+
+func (t *Task) SetEnabled() error {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	if t.State != Disabled {
-		panic(errors.New("Current state must be Disabled"))
+		return fmt.Errorf("Current state must be Disabled, not %d", t.State)
 	}
 	t.State = Enabled
+	return nil
+}
+
+func (t *Task) MustSetEnabled() {
+	err := t.SetEnabled()
+	if err != nil {
+		panic(err)
+	}
 }
 
 func (t *Task) IsEnabled() bool {
@@ -152,11 +239,11 @@ func (t *Task) IsEnabled() bool {
 	return t.State == Enabled
 }
 
-func (t *Task) SetWaiting() {
+func (t *Task) MustSetWaiting() {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	if t.State != Enabled {
-		panic(errors.New("Current state must be Enabled"))
+		panic(fmt.Errorf("Current state must be Enabled, not %d", t.State))
 	}
 	t.State = Waiting
 }
@@ -167,11 +254,11 @@ func (t *Task) IsWaiting() bool {
 	return t.State == Waiting
 }
 
-func (t *Task) SetRunning() {
+func (t *Task) MustSetRunning() {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	if t.State != Waiting {
-		panic(errors.New("Current state must be Waiting"))
+		panic(fmt.Errorf("Current state must be Waiting, not %d", t.State))
 	}
 	t.State = Running
 }
@@ -182,11 +269,11 @@ func (t *Task) IsRunning() bool {
 	return t.State == Running
 }
 
-func (t *Task) SetSuccess() {
+func (t *Task) MustSetSuccess() {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	if t.State != Running {
-		panic(errors.New("Current state must be Running"))
+		panic(fmt.Errorf("Current state must be Running, not %d", t.State))
 	}
 	t.State = Success
 }
@@ -197,11 +284,11 @@ func (t *Task) IsSuccess() bool {
 	return t.State == Success
 }
 
-func (t *Task) SetFailure() {
+func (t *Task) MustSetFailure() {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	if t.State != Running {
-		panic(errors.New("Current state must be Running"))
+		panic(fmt.Errorf("Current state must be Running, not %d", t.State))
 	}
 	t.State = Failure
 }

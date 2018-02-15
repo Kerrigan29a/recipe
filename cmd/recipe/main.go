@@ -2,15 +2,21 @@ package main
 
 import (
 	"flag"
-	"runtime"
+	"fmt"
 	"github.com/Kerrigan29a/recipe"
 	"os"
-	"fmt"
+	"runtime"
 )
 
 var version string
 
 func parseArgs(task *string, numWorkers *uint, level *recipe.LoggerLevel) []string {
+	oldUsage := flag.Usage
+	flag.Usage = func() {
+		oldUsage()
+		fmt.Println("")
+		fmt.Printf("Version: %s\n", version)
+	}
 	var verbose, quiet bool
 	flag.UintVar(numWorkers, "w", uint(runtime.NumCPU()), "Amount of workers")
 	flag.StringVar(task, "m", "", "Main task")
@@ -20,12 +26,12 @@ func parseArgs(task *string, numWorkers *uint, level *recipe.LoggerLevel) []stri
 	paths := flag.Args()
 	if len(paths) <= 0 {
 		fmt.Fprintf(os.Stderr, "Must supply a recipe file\n\n")
-		printUsage()
+		flag.Usage()
 		os.Exit(1)
 	}
 	if verbose && quiet {
 		fmt.Fprintf(os.Stderr, "Only can select verbose or quiet mode, but not both\n\n")
-		printUsage()
+		flag.Usage()
 		os.Exit(1)
 	}
 	if verbose {
@@ -36,12 +42,6 @@ func parseArgs(task *string, numWorkers *uint, level *recipe.LoggerLevel) []stri
 		*level = recipe.InfoL
 	}
 	return paths
-}
-
-func printUsage() {
-	flag.Usage()
-	fmt.Println("")
-	fmt.Printf("Version: %s\n", version)
 }
 
 func main() {
