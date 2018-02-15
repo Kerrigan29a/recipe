@@ -5,13 +5,13 @@ package recipe
 import (
 	"os"
 	"os/exec"
-	"errors"
 	"context"
 	"sync"
 	"encoding/json"
 	"bytes"
 	"runtime"
 	"strings"
+	"fmt"
 )
 
 /***
@@ -137,13 +137,27 @@ func (t *Task) Execute(ctx context.Context, r *Recipe) error {
 	return nil
 }
 
-func (t *Task) SetEnabled() {
+func (t *Task) SetDisabled() {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	t.State = Disabled
+}
+
+func (t *Task) SetEnabled() error {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	if t.State != Disabled {
-		panic(errors.New("Current state must be Disabled"))
+		return fmt.Errorf("Current state must be Disabled, not %d", t.State)
 	}
 	t.State = Enabled
+	return nil
+}
+
+func (t *Task) MustSetEnabled() {
+	err := t.SetEnabled()
+	if err != nil {
+		panic(err)
+	}
 }
 
 func (t *Task) IsEnabled() bool {
@@ -152,11 +166,11 @@ func (t *Task) IsEnabled() bool {
 	return t.State == Enabled
 }
 
-func (t *Task) SetWaiting() {
+func (t *Task) MustSetWaiting() {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	if t.State != Enabled {
-		panic(errors.New("Current state must be Enabled"))
+		panic(fmt.Errorf("Current state must be Enabled, not %d", t.State))
 	}
 	t.State = Waiting
 }
@@ -167,11 +181,11 @@ func (t *Task) IsWaiting() bool {
 	return t.State == Waiting
 }
 
-func (t *Task) SetRunning() {
+func (t *Task) MustSetRunning() {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	if t.State != Waiting {
-		panic(errors.New("Current state must be Waiting"))
+		panic(fmt.Errorf("Current state must be Waiting, not %d", t.State))
 	}
 	t.State = Running
 }
@@ -182,11 +196,11 @@ func (t *Task) IsRunning() bool {
 	return t.State == Running
 }
 
-func (t *Task) SetSuccess() {
+func (t *Task) MustSetSuccess() {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	if t.State != Running {
-		panic(errors.New("Current state must be Running"))
+		panic(fmt.Errorf("Current state must be Running, not %d", t.State))
 	}
 	t.State = Success
 }
@@ -197,11 +211,11 @@ func (t *Task) IsSuccess() bool {
 	return t.State == Success
 }
 
-func (t *Task) SetFailure() {
+func (t *Task) MustSetFailure() {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	if t.State != Running {
-		panic(errors.New("Current state must be Running"))
+		panic(fmt.Errorf("Current state must be Running, not %d", t.State))
 	}
 	t.State = Failure
 }

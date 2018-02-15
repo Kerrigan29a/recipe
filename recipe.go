@@ -94,13 +94,20 @@ func (r *Recipe) RunTask(task string, numWorkers uint) error {
 	return r.run(numWorkers)
 }
 
-func (r *Recipe) enableTasks(name string) {
-	t := r.Tasks[name]
+func (r *Recipe) enableTasks(name string) error {
+	t, ok := r.Tasks[name]
+	if !ok {
+		return fmt.Errorf("The task is not defined in the recipe: %s", name)
+	}
 	t.SetEnabled()
 	r.logger.Debug("Enabled: %s", name)
 	for _, n := range t.Deps {
-		r.enableTasks(n)
+		err := r.enableTasks(n)
+		if err != nil {
+			return nil
+		}
 	}
+	return nil
 }
 
 func (r *Recipe) countEnabled() int{
@@ -116,7 +123,10 @@ func (r *Recipe) countEnabled() int{
 func (r *Recipe) run(numWorkers uint) error {
 	r.logger.Info("Main: %s", r.Main)
 	r.logger.Info("Workers: %d", numWorkers)
-	r.enableTasks(r.Main)
+	err := r.enableTasks(r.Main)
+	if err != nil {
+		return err
+	}
 	resultCh := make(chan *result, numWorkers)
 	namedTaskCh := make(chan *namedTask, r.countEnabled())
 	doneCh := make(chan error)
@@ -132,7 +142,7 @@ func (r *Recipe) run(numWorkers uint) error {
 func (r *Recipe) consumer(id uint, resultCh chan<- *result, namedTaskCh <-chan *namedTask) {
 	//r.logger.Debug("Starting consumer %d", id)
 	for nt := range namedTaskCh {
-		nt.t.SetRunning()
+		nt.t.MustSetRunning()
 		ctx, cancel := context.WithCancel(context.Background())
 		nt.t.SetCancel(cancel)
 		r.logger.Debug("Running: %s", nt.n)
@@ -148,7 +158,7 @@ func (r *Recipe) producer(namedTaskCh chan<- *namedTask, dispatchAgainCh <-chan 
 		r.logger.Debug("Searching ready tasks")
 		it := r.readyTasks()
 		for n, t := it.next(); t != nil; n, t = it.next() {
-			t.SetWaiting()
+			t.MustSetWaiting()
 			r.logger.Debug("Waiting: %s", n)
 			namedTaskCh <- &namedTask{n, t}
 		}
@@ -192,7 +202,7 @@ func (r *Recipe) validator(resultCh <-chan *result, dispatchAgainCh chan<- bool,
 }
 
 func (r *Recipe) onSuccess(name string) {
-	r.Tasks[name].SetSuccess()
+	r.Tasks[name].MustSetSuccess()
 }
 
 func (r *Recipe) onFailure(name string) {
@@ -203,7 +213,7 @@ func (r *Recipe) onFailure(name string) {
 				cancel()
 			}
 		} else {
-			t.SetFailure()
+			t.MustSetFailure()
 		}
 	}
 }
