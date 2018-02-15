@@ -1,7 +1,7 @@
 # Recipe
 
-[![Build Status](https://travis-ci.org/Kerrigan29a/recipe.svg?branch=master)](https://travis-ci.org/Kerrigan29a/recipe)
-[![Build status](https://ci.appveyor.com/api/projects/status/6pc8ix5w3btsw75l/branch/master?svg=true)](https://ci.appveyor.com/project/Kerrigan29a/recipe/branch/master)
+[![Build Status](https://travis-ci.org/Kerrigan29a/recipe.svg)](https://travis-ci.org/Kerrigan29a/recipe)
+[![Build status](https://ci.appveyor.com/api/projects/status/6pc8ix5w3btsw75l?svg=true)](https://ci.appveyor.com/project/Kerrigan29a/recipe)
 [![Go Report Card](https://goreportcard.com/badge/github.com/kerrigan29a/recipe)](https://goreportcard.com/report/github.com/kerrigan29a/recipe)
 [![GoDoc](https://godoc.org/github.com/Kerrigan29a/recipe?status.svg)](https://godoc.org/github.com/Kerrigan29a/recipe)
 
