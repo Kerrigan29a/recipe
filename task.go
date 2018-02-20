@@ -4,7 +4,6 @@ package recipe
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -38,7 +37,7 @@ type Task struct {
 	Stderr       string            `json:"stderr" toml:"stderr"`
 	AllowFailure bool              `json:"allow_failure" toml:"allow_failure"`
 	State        TaskState         `json:"state" toml:"state"`
-	cancel       context.CancelFunc
+	cmd          *exec.Cmd
 	mu           sync.RWMutex
 }
 
@@ -84,7 +83,6 @@ func (t *Task) UnmarshalJSON(b []byte) error {
 	t.Stderr = newT.Stderr
 	t.AllowFailure = newT.AllowFailure
 	t.State = newT.State
-	t.cancel = newT.cancel
 	t.mu = newT.mu
 
 	fmt.Printf("DEBUG task = %s\n", t)
@@ -110,7 +108,6 @@ func (t *Task) UnmarshalTOML(b []byte) error {
 	t.Stderr = newT.Stderr
 	t.AllowFailure = newT.AllowFailure
 	t.State = newT.State
-	t.cancel = newT.cancel
 	t.mu = newT.mu
 
 	fmt.Printf("DEBUG task = %s\n", t)
@@ -156,7 +153,7 @@ func (t *Task) composeInterpreterCmd(spell string, r *Recipe) []string {
 	return t.composeDefaultInterpreterCmd(spell)
 }
 
-func (t *Task) Execute(ctx context.Context, r *Recipe) error {
+func (t *Task) Execute(r *Recipe) error {
 	t.mu.RLock()
 	defer t.mu.RUnlock()
 
@@ -173,7 +170,7 @@ func (t *Task) Execute(ctx context.Context, r *Recipe) error {
 		return err
 	}
 	// Create cmd
-	cmd := exec.CommandContext(ctx, path, parts[1:]...)
+	t.cmd = exec.Command(path, parts[1:]...)
 	// Redirect stdout and stderr
 	if t.Stdout != "" {
 		f, err := os.Create(t.Stdout)
@@ -181,9 +178,9 @@ func (t *Task) Execute(ctx context.Context, r *Recipe) error {
 			return err
 		}
 		defer f.Close()
-		cmd.Stdout = f
+		t.cmd.Stdout = f
 	} else {
-		cmd.Stdout = os.Stdout
+		t.cmd.Stdout = os.Stdout
 	}
 	if t.Stderr != "" {
 		f, err := os.Create(t.Stderr)
@@ -191,17 +188,17 @@ func (t *Task) Execute(ctx context.Context, r *Recipe) error {
 			return err
 		}
 		defer f.Close()
-		cmd.Stderr = f
+		t.cmd.Stderr = f
 	} else {
-		cmd.Stderr = os.Stderr
+		t.cmd.Stderr = os.Stderr
 	}
-	cmd.Env = env
+	t.cmd.Env = env
 
 	// Set SysProcAttr
-	t.setSysProcAttr(cmd)
+	t.setSysProcAttr()
 
 	// Run
-	err = cmd.Run()
+	err = t.cmd.Run()
 	if err != nil {
 		return err
 	}
@@ -295,18 +292,6 @@ func (t *Task) IsFailure() bool {
 	t.mu.RLock()
 	defer t.mu.RUnlock()
 	return t.State == Failure
-}
-
-func (t *Task) SetCancel(cancel context.CancelFunc) {
-	t.mu.Lock()
-	defer t.mu.Unlock()
-	t.cancel = cancel
-}
-
-func (t *Task) Cancel() context.CancelFunc {
-	t.mu.RLock()
-	defer t.mu.RUnlock()
-	return t.cancel
 }
 
 func (t *Task) Environ() map[string]string {
