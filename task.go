@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"runtime"
 	"strings"
 	"sync"
 )
@@ -143,23 +142,18 @@ func (t *Task) composeInterpreterCmd(spell string, r *Recipe) []string {
 	// Check task config
 	if parts := t.Interpreter(); parts != nil {
 		if len(parts) == 0 {
-			goto defaultConfig
+			return t.composeDefaultInterpreterCmd(spell)
 		}
 		return replaceCmd(parts, spell)
 	}
 	// Check recipe config
 	if parts := r.Interpreter(); parts != nil {
 		if len(parts) == 0 {
-			goto defaultConfig
+			return t.composeDefaultInterpreterCmd(spell)
 		}
 		return replaceCmd(parts, spell)
 	}
-defaultConfig:
-	// Default config
-	if runtime.GOOS == "windows" {
-		return []string{"cmd", "/c", spell}
-	}
-	return []string{"/bin/sh", "-c", "exec " + spell}
+	return t.composeDefaultInterpreterCmd(spell)
 }
 
 func (t *Task) Execute(ctx context.Context, r *Recipe) error {
