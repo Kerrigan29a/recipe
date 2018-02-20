@@ -196,6 +196,10 @@ func (t *Task) Execute(ctx context.Context, r *Recipe) error {
 		cmd.Stderr = os.Stderr
 	}
 	cmd.Env = env
+
+	// Set SysProcAttr
+	t.setSysProcAttr(cmd)
+
 	// Run
 	err = cmd.Run()
 	if err != nil {
