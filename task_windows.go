@@ -2,7 +2,10 @@
 
 package recipe
 
-import "os/exec"
+import (
+	"os/exec"
+	"syscall"
+)
 
 func (t *Task) composeDefaultInterpreterCmd(spell string) []string {
 	return []string{"cmd", "/c", spell}
