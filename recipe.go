@@ -176,7 +176,7 @@ func (r *Recipe) validator(resultCh <-chan *result, dispatchAgainCh chan<- bool,
 		result := <-resultCh
 		if result.e != nil {
 			if r.Tasks[result.n].AllowFailure {
-				r.logger.Debug("Allowed Failure: %s", result.n)
+				r.logger.Info("Allowed Failure: %s", result.n)
 				goto success
 			}
 			r.logger.Debug("Failure: %s", result.n)
