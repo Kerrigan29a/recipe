@@ -37,7 +37,12 @@ func (t *Task) Terminate() error {
 	}
 
 	// TODO: Use a better way. Probably using https://github.com/alexbrainman/ps
-	err := exec.Command("taskkill", "/F", "/T", "/PID", fmt.Sprint(p.Pid)).Run()
+	// Search program
+	path, err := exec.LookPath("taskkill")
+	if err != nil {
+		return err
+	}
+	err = exec.Command(path, "/F", "/T", "/PID", fmt.Sprint(p.Pid)).Run()
 	if err != nil {
 		return err
 	}
