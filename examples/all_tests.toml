@@ -3,13 +3,16 @@ main = "all"
 interp = ['go', 'run', 'cmd/recipe/main.go', '{cmd}']
 
 [tasks.all]
-deps = ["basic", "cancel", "parallel"]
+deps = ["basic", "cancel", "children", "parallel"]
 
 [tasks.basic]
 deps = ["basic_json", "basic_toml"]
 
 [tasks.cancel]
 deps = ["cancel_json", "cancel_toml"]
+
+[tasks.children]
+deps = ["children_json", "children_toml"]
 
 [tasks.parallel]
 deps = ["parallel_json", "parallel_toml"]
@@ -26,6 +29,14 @@ allow_failure = true
 
 [tasks.cancel_toml]
 cmd = "examples/cancel.toml"
+allow_failure = true
+
+[tasks.children_json]
+cmd = "examples/children.json"
+allow_failure = true
+
+[tasks.children_toml]
+cmd = "examples/children.toml"
 allow_failure = true
 
 [tasks.parallel_json]
