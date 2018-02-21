@@ -19,13 +19,20 @@ func (t *Task) setSysProcAttr() {
 }
 
 func (t *Task) Terminate() error {
+	cmd := t.cmd
+	if cmd == nil {
+		return nil
+	}
+	p := cmd.Process
+	if p == nil {
+		return nil
+	}
+
 	kernel32, err := syscall.LoadDLL("kernel32.dll")
 	if err != nil {
 		return err
 	}
 	defer kernel32.Release()
-
-	pid := t.cmd.Process.Pid
 
 	setConsoleCtrlHandler, err := kernel32.FindProc("SetConsoleCtrlHandler")
 	if err != nil {
@@ -39,7 +46,7 @@ func (t *Task) Terminate() error {
 	if err != nil {
 		return err
 	}
-	result, _, err = generateConsoleCtrlEvent.Call(syscall.CTRL_BREAK_EVENT, uintptr(pid))
+	result, _, err = generateConsoleCtrlEvent.Call(syscall.CTRL_BREAK_EVENT, uintptr(p.Pid))
 	if result == 0 {
 		return err
 	}

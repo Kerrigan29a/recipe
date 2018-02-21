@@ -20,7 +20,11 @@ func (t *Task) setSysProcAttr() {
 }
 
 func (t *Task) Terminate() error {
-	p := t.cmd.Process
+	cmd := t.cmd
+	if cmd == nil {
+		return nil
+	}
+	p := cmd.Process
 	if p == nil {
 		return nil
 	}
