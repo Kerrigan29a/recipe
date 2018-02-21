@@ -12,9 +12,9 @@ import (
 	"sync"
 )
 
-/***
-* Sources:
-*  - https://blog.kowalczyk.info/article/wOYk/advanced-command-execution-in-go-with-osexec.html
+/*
+ * Sources:
+ * - https://blog.kowalczyk.info/article/wOYk/advanced-command-execution-in-go-with-osexec.html
  */
 
 type TaskState int

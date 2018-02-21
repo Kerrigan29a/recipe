@@ -1,6 +1,10 @@
 // +build !windows
 
-// From: https://github.com/mattn/goreman/blob/master/proc_posix.go
+/*
+ * Sources:
+ * - https://github.com/mattn/goreman/blob/master/proc_posix.go
+ * - https://github.com/golang/dep/issues/862
+ */
 
 package recipe
 

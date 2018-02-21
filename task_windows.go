@@ -1,11 +1,19 @@
 // +build windows
 
-// From: https://github.com/mattn/goreman/blob/master/proc_windows.go
+/*
+ * Sources:
+ * - https://github.com/mattn/goreman/blob/master/proc_windows.go
+ * - https://github.com/golang/dep/issues/862
+ * - https://github.com/alexbrainman/ps
+ */
+
 
 package recipe
 
 import (
 	"syscall"
+	"os/exec"
+	"fmt"
 )
 
 func (t *Task) composeDefaultInterpreterCmd(spell string) []string {
@@ -28,26 +36,9 @@ func (t *Task) Terminate() error {
 		return nil
 	}
 
-	kernel32, err := syscall.LoadDLL("kernel32.dll")
+	// TODO: Use a better way. Probably using https://github.com/alexbrainman/ps
+	err := exec.Command("taskkill", "/F", "/T", "/PID", fmt.Sprint(p.Pid)).Run()
 	if err != nil {
-		return err
-	}
-	defer kernel32.Release()
-
-	setConsoleCtrlHandler, err := kernel32.FindProc("SetConsoleCtrlHandler")
-	if err != nil {
-		return err
-	}
-	result, _, err := setConsoleCtrlHandler.Call(0, 1)
-	if result == 0 {
-		return err
-	}
-	generateConsoleCtrlEvent, err := kernel32.FindProc("GenerateConsoleCtrlEvent")
-	if err != nil {
-		return err
-	}
-	result, _, err = generateConsoleCtrlEvent.Call(syscall.CTRL_BREAK_EVENT, uintptr(p.Pid))
-	if result == 0 {
 		return err
 	}
 	return nil
