@@ -35,7 +35,7 @@ func (t *Task) Terminate() error {
 	if result == 0 {
 		return err
 	}
-	generateConsoleCtrlEvent, err = kernel32.FindProc("GenerateConsoleCtrlEvent")
+	generateConsoleCtrlEvent, err := kernel32.FindProc("GenerateConsoleCtrlEvent")
 	if err != nil {
 		return err
 	}
