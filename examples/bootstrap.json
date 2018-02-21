@@ -3,6 +3,11 @@
   "env": {
     "GOARCH": "amd64"
   },
+  "interp": [
+    "bash",
+    "-c",
+    "exec {cmd}"
+  ],
   "tasks": {
     "build_debug": {
       "cmd": "go build -race -ldflags \"-X main.version=`cat VERSION`+`date -u +%Y%m%d.%H%M%S`\" ./cmd/recipe/",

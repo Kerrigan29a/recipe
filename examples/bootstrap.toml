@@ -1,5 +1,7 @@
 main = "build_debug"
 
+interp = ['bash', '-c', 'exec {cmd}']
+
 [env]
 GOARCH = "amd64"
 
