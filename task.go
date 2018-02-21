@@ -4,19 +4,17 @@ package recipe
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
-	"runtime"
 	"strings"
 	"sync"
 )
 
-/***
-* Sources:
-*  - https://blog.kowalczyk.info/article/wOYk/advanced-command-execution-in-go-with-osexec.html
+/*
+ * Sources:
+ * - https://blog.kowalczyk.info/article/wOYk/advanced-command-execution-in-go-with-osexec.html
  */
 
 type TaskState int
@@ -39,7 +37,7 @@ type Task struct {
 	Stderr       string            `json:"stderr" toml:"stderr"`
 	AllowFailure bool              `json:"allow_failure" toml:"allow_failure"`
 	State        TaskState         `json:"state" toml:"state"`
-	cancel       context.CancelFunc
+	cmd          *exec.Cmd
 	mu           sync.RWMutex
 }
 
@@ -85,7 +83,6 @@ func (t *Task) UnmarshalJSON(b []byte) error {
 	t.Stderr = newT.Stderr
 	t.AllowFailure = newT.AllowFailure
 	t.State = newT.State
-	t.cancel = newT.cancel
 	t.mu = newT.mu
 
 	fmt.Printf("DEBUG task = %s\n", t)
@@ -111,7 +108,6 @@ func (t *Task) UnmarshalTOML(b []byte) error {
 	t.Stderr = newT.Stderr
 	t.AllowFailure = newT.AllowFailure
 	t.State = newT.State
-	t.cancel = newT.cancel
 	t.mu = newT.mu
 
 	fmt.Printf("DEBUG task = %s\n", t)
@@ -143,26 +139,21 @@ func (t *Task) composeInterpreterCmd(spell string, r *Recipe) []string {
 	// Check task config
 	if parts := t.Interpreter(); parts != nil {
 		if len(parts) == 0 {
-			goto defaultConfig
+			return t.composeDefaultInterpreterCmd(spell)
 		}
 		return replaceCmd(parts, spell)
 	}
 	// Check recipe config
 	if parts := r.Interpreter(); parts != nil {
 		if len(parts) == 0 {
-			goto defaultConfig
+			return t.composeDefaultInterpreterCmd(spell)
 		}
 		return replaceCmd(parts, spell)
 	}
-defaultConfig:
-	// Default config
-	if runtime.GOOS == "windows" {
-		return []string{"cmd", "/c", spell}
-	}
-	return []string{"/bin/sh", "-c", "exec " + spell}
+	return t.composeDefaultInterpreterCmd(spell)
 }
 
-func (t *Task) Execute(ctx context.Context, r *Recipe) error {
+func (t *Task) Execute(r *Recipe) error {
 	t.mu.RLock()
 	defer t.mu.RUnlock()
 
@@ -179,7 +170,7 @@ func (t *Task) Execute(ctx context.Context, r *Recipe) error {
 		return err
 	}
 	// Create cmd
-	cmd := exec.CommandContext(ctx, path, parts[1:]...)
+	t.cmd = exec.Command(path, parts[1:]...)
 	// Redirect stdout and stderr
 	if t.Stdout != "" {
 		f, err := os.Create(t.Stdout)
@@ -187,9 +178,9 @@ func (t *Task) Execute(ctx context.Context, r *Recipe) error {
 			return err
 		}
 		defer f.Close()
-		cmd.Stdout = f
+		t.cmd.Stdout = f
 	} else {
-		cmd.Stdout = os.Stdout
+		t.cmd.Stdout = os.Stdout
 	}
 	if t.Stderr != "" {
 		f, err := os.Create(t.Stderr)
@@ -197,13 +188,17 @@ func (t *Task) Execute(ctx context.Context, r *Recipe) error {
 			return err
 		}
 		defer f.Close()
-		cmd.Stderr = f
+		t.cmd.Stderr = f
 	} else {
-		cmd.Stderr = os.Stderr
+		t.cmd.Stderr = os.Stderr
 	}
-	cmd.Env = env
+	t.cmd.Env = env
+
+	// Set SysProcAttr
+	t.setSysProcAttr()
+
 	// Run
-	err = cmd.Run()
+	err = t.cmd.Run()
 	if err != nil {
 		return err
 	}
@@ -297,18 +292,6 @@ func (t *Task) IsFailure() bool {
 	t.mu.RLock()
 	defer t.mu.RUnlock()
 	return t.State == Failure
-}
-
-func (t *Task) SetCancel(cancel context.CancelFunc) {
-	t.mu.Lock()
-	defer t.mu.Unlock()
-	t.cancel = cancel
-}
-
-func (t *Task) Cancel() context.CancelFunc {
-	t.mu.RLock()
-	defer t.mu.RUnlock()
-	return t.cancel
 }
 
 func (t *Task) Environ() map[string]string {

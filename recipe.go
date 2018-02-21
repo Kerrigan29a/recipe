@@ -2,7 +2,6 @@ package recipe
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/DisposaBoy/JsonConfigReader"
@@ -143,10 +142,8 @@ func (r *Recipe) consumer(id uint, resultCh chan<- *result, namedTaskCh <-chan *
 	//r.logger.Debug("Starting consumer %d", id)
 	for nt := range namedTaskCh {
 		nt.t.MustSetRunning()
-		ctx, cancel := context.WithCancel(context.Background())
-		nt.t.SetCancel(cancel)
 		r.logger.Debug("Running: %s", nt.n)
-		err := nt.t.Execute(ctx, r)
+		err := nt.t.Execute(r)
 		resultCh <- &result{nt.n, err}
 	}
 	//r.logger.Debug("Stopping consumer %d", id)
@@ -176,7 +173,7 @@ func (r *Recipe) validator(resultCh <-chan *result, dispatchAgainCh chan<- bool,
 		result := <-resultCh
 		if result.e != nil {
 			if r.Tasks[result.n].AllowFailure {
-				r.logger.Debug("Allowed Failure: %s", result.n)
+				r.logger.Info("Allowed Failure: %s", result.n)
 				goto success
 			}
 			r.logger.Debug("Failure: %s", result.n)
@@ -209,8 +206,11 @@ func (r *Recipe) onFailure(name string) {
 	for n, t := range r.Tasks {
 		if n != name {
 			if t.IsRunning() {
-				cancel := t.Cancel()
-				cancel()
+				r.logger.Debug("Cancelling: %s", n)
+				err := t.Terminate()
+				if err != nil {
+					r.logger.Error("Unable to terminate '%s': %s", n, err.Error())
+				}
 			}
 		} else {
 			t.MustSetFailure()

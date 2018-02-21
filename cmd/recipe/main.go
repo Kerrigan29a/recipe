@@ -11,9 +11,9 @@ import (
 var version string
 
 func parseArgs(task *string, numWorkers *uint, level *recipe.LoggerLevel) []string {
-	oldUsage := flag.Usage
 	flag.Usage = func() {
-		oldUsage()
+		fmt.Printf("Usage of %s:\n", os.Args[0])
+		flag.PrintDefaults()
 		fmt.Println("")
 		fmt.Printf("Version: %s\n", version)
 	}

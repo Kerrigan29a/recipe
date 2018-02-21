@@ -1,0 +1,15 @@
+main = "t1"
+
+interp = ['bash', '-c', '{cmd}']
+
+[tasks.t1]
+deps = ["t2", "t3",]
+cmd = 'echo You must not see this message because of the failure!!!'
+stdout = ""
+stderr = ""
+
+[tasks.t2]
+cmd = 'echo SLEEPING && sleep 10 && echo DONE'
+
+[tasks.t3]
+cmd = 'sleep 2 && echo CANCELLING && false'
