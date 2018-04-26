@@ -5,6 +5,7 @@ sudo: false
 before_install:
 - go get -v golang.org/x/tools/cmd/stringer
 script:
+- go test
 - go run cmd/recipe/main.go -v -w 1 examples/all_tests.toml
 - go run cmd/recipe/main.go -v -m build_release examples/bootstrap.toml
 deploy:

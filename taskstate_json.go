@@ -11,6 +11,7 @@ func (s TaskState) MarshalJSON() ([]byte, error) {
 }
 
 func (s *TaskState) UnmarshalJSON(b []byte) error {
+	b = b[1 : len(b)-1]
 	position := strings.Index(_TaskState_name, string(b))
 	for i, p := range _TaskState_index {
 		if position == int(p) {
