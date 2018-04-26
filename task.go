@@ -1,11 +1,8 @@
-//go:generate stringer -type=TaskState
-
 package recipe
 
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"os"
 	"os/exec"
 	"strings"
@@ -17,17 +14,6 @@ import (
  * - https://blog.kowalczyk.info/article/wOYk/advanced-command-execution-in-go-with-osexec.html
  */
 
-type TaskState int
-
-const (
-	Disabled TaskState = iota
-	Enabled
-	Waiting
-	Running
-	Success
-	Failure
-)
-
 type Task struct {
 	Deps         []string          `json:"deps" toml:"deps"`
 	Env          map[string]string `json:"env" toml:"env"`
@@ -36,7 +22,6 @@ type Task struct {
 	Stdout       string            `json:"stdout" toml:"stdout"`
 	Stderr       string            `json:"stderr" toml:"stderr"`
 	AllowFailure bool              `json:"allow_failure" toml:"allow_failure"`
-	State        TaskState         `json:"state" toml:"state"`
 	cmd          *exec.Cmd
 	mu           sync.RWMutex
 }
@@ -61,7 +46,6 @@ func (t *task) reset() {
 	t.Stdout = ""
 	t.Stderr = ""
 	t.AllowFailure = false
-	t.State = Disabled
 }
 
 func (t *Task) UnmarshalJSON(b []byte) error {
@@ -82,7 +66,6 @@ func (t *Task) UnmarshalJSON(b []byte) error {
 	t.Stdout = newT.Stdout
 	t.Stderr = newT.Stderr
 	t.AllowFailure = newT.AllowFailure
-	t.State = newT.State
 	t.mu = newT.mu
 
 	fmt.Printf("DEBUG task = %s\n", t)
@@ -107,7 +90,6 @@ func (t *Task) UnmarshalTOML(b []byte) error {
 	t.Stdout = newT.Stdout
 	t.Stderr = newT.Stderr
 	t.AllowFailure = newT.AllowFailure
-	t.State = newT.State
 	t.mu = newT.mu
 
 	fmt.Printf("DEBUG task = %s\n", t)
@@ -205,95 +187,6 @@ func (t *Task) Execute(r *Recipe) error {
 	return nil
 }
 
-func (t *Task) SetDisabled() {
-	t.mu.Lock()
-	defer t.mu.Unlock()
-	t.State = Disabled
-}
-
-func (t *Task) SetEnabled() error {
-	t.mu.Lock()
-	defer t.mu.Unlock()
-	if t.State != Disabled {
-		return fmt.Errorf("Current state must be Disabled, not %d", t.State)
-	}
-	t.State = Enabled
-	return nil
-}
-
-func (t *Task) MustSetEnabled() {
-	err := t.SetEnabled()
-	if err != nil {
-		panic(err)
-	}
-}
-
-func (t *Task) IsEnabled() bool {
-	t.mu.RLock()
-	defer t.mu.RUnlock()
-	return t.State == Enabled
-}
-
-func (t *Task) MustSetWaiting() {
-	t.mu.Lock()
-	defer t.mu.Unlock()
-	if t.State != Enabled {
-		panic(fmt.Errorf("Current state must be Enabled, not %d", t.State))
-	}
-	t.State = Waiting
-}
-
-func (t *Task) IsWaiting() bool {
-	t.mu.RLock()
-	defer t.mu.RUnlock()
-	return t.State == Waiting
-}
-
-func (t *Task) MustSetRunning() {
-	t.mu.Lock()
-	defer t.mu.Unlock()
-	if t.State != Waiting {
-		panic(fmt.Errorf("Current state must be Waiting, not %d", t.State))
-	}
-	t.State = Running
-}
-
-func (t *Task) IsRunning() bool {
-	t.mu.RLock()
-	defer t.mu.RUnlock()
-	return t.State == Running
-}
-
-func (t *Task) MustSetSuccess() {
-	t.mu.Lock()
-	defer t.mu.Unlock()
-	if t.State != Running {
-		panic(fmt.Errorf("Current state must be Running, not %d", t.State))
-	}
-	t.State = Success
-}
-
-func (t *Task) IsSuccess() bool {
-	t.mu.RLock()
-	defer t.mu.RUnlock()
-	return t.State == Success
-}
-
-func (t *Task) MustSetFailure() {
-	t.mu.Lock()
-	defer t.mu.Unlock()
-	if t.State != Running {
-		panic(fmt.Errorf("Current state must be Running, not %d", t.State))
-	}
-	t.State = Failure
-}
-
-func (t *Task) IsFailure() bool {
-	t.mu.RLock()
-	defer t.mu.RUnlock()
-	return t.State == Failure
-}
-
 func (t *Task) Environ() map[string]string {
 	t.mu.RLock()
 	defer t.mu.RUnlock()
@@ -307,22 +200,24 @@ func (t *Task) Interpreter() []string {
 }
 
 func (t *Task) String() string {
-	return t.string(false)
+	return t.serialize(false).String()
 }
 
 func (t *Task) PrettyString() string {
-	return t.string(true)
+	return t.serialize(true).String()
 }
 
-func (t *Task) string(indent bool) string {
+func (t *Task) serialize(indent bool) *bytes.Buffer {
+	t.mu.RLock()
+	defer t.mu.RUnlock()
 	b := bytes.Buffer{}
 	e := json.NewEncoder(&b)
 	if indent {
-		e.SetIndent("", " ")
+		e.SetIndent("", "  ")
 	}
 	err := e.Encode(t)
 	if err != nil {
 		panic(err)
 	}
-	return b.String()
+	return &b
 }

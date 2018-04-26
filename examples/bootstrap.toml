@@ -28,9 +28,13 @@ cmd = 'go build -ldflags "-X main.version=`cat VERSION`+`date -u +%Y%m%d.%H%M%S`
 cmd = 'go generate -x'
 
 [tasks.clean]
-deps = ['clean_more']
+deps = ['clean_binaries', 'clean_states']
 cmd = 'go clean -i'
 
-[tasks.clean_more]
+[tasks.clean_binaries]
 cmd = 'rm recipe recipe.exe recipe.linux recipe.darwin'
+allow_failure = true
+
+[tasks.clean_states]
+cmd = 'rm examples/*.state'
 allow_failure = true

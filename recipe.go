@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/DisposaBoy/JsonConfigReader"
-	"github.com/pelletier/go-toml"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
+
+	"github.com/DisposaBoy/JsonConfigReader"
+	"github.com/pelletier/go-toml"
 )
 
 type Recipe struct {
@@ -17,6 +19,7 @@ type Recipe struct {
 	Interp []string          `json:"interp" toml:"interp"`
 	Tasks  map[string]*Task  `json:"tasks"`
 	logger *Logger
+	state  *State
 	mu     sync.RWMutex
 }
 
@@ -37,6 +40,7 @@ func Open(path string, logger *Logger) (*Recipe, error) {
 		return nil, fmt.Errorf("(%s) %s", path, err.Error())
 	}
 
+	/* Guess type of file and decode it */
 	ext := filepath.Ext(path)
 	if ext == ".json" {
 		err = json.NewDecoder(JsonConfigReader.New(f)).Decode(&r)
@@ -52,8 +56,17 @@ func Open(path string, logger *Logger) (*Recipe, error) {
 		// TODO: Implement a modeline mechanism? // -*- coding: utf-8; mode: json; -*-
 		return nil, fmt.Errorf("(%s) Unknown filetype", path)
 	}
+
+	// NOTE: Create the rest of Recipe fields after the decoding step
+
+	/* Create state */
+	r.state = NewState(strings.Replace(path, ext, ".state", -1))
+
+	/* Set logger */
 	r.logger = logger
 	r.logger.Debug("Recipe: %s", r.PrettyString())
+
+	/* Check the recipe */
 	if err := r.check(); err != nil {
 		return nil, fmt.Errorf("(%s) %s", path, err.Error())
 	}
@@ -98,7 +111,7 @@ func (r *Recipe) enableTasks(name string) error {
 	if !ok {
 		return fmt.Errorf("The task is not defined in the recipe: %s", name)
 	}
-	t.SetEnabled()
+	r.state.SetEnabled(name)
 	r.logger.Debug("Enabled: %s", name)
 	for _, n := range t.Deps {
 		err := r.enableTasks(n)
@@ -111,8 +124,8 @@ func (r *Recipe) enableTasks(name string) error {
 
 func (r *Recipe) countEnabled() int {
 	i := 0
-	for _, t := range r.Tasks {
-		if t.IsEnabled() {
+	for n := range r.Tasks {
+		if r.state.IsEnabled(n) {
 			i++
 		}
 	}
@@ -141,7 +154,7 @@ func (r *Recipe) run(numWorkers uint) error {
 func (r *Recipe) consumer(id uint, resultCh chan<- *result, namedTaskCh <-chan *namedTask) {
 	//r.logger.Debug("Starting consumer %d", id)
 	for nt := range namedTaskCh {
-		nt.t.MustSetRunning()
+		r.state.MustSetRunning(nt.n)
 		r.logger.Debug("Running: %s", nt.n)
 		err := nt.t.Execute(r)
 		resultCh <- &result{nt.n, err}
@@ -155,7 +168,7 @@ func (r *Recipe) producer(namedTaskCh chan<- *namedTask, dispatchAgainCh <-chan 
 		r.logger.Debug("Searching ready tasks")
 		it := r.readyTasks()
 		for n, t := it.next(); t != nil; n, t = it.next() {
-			t.MustSetWaiting()
+			r.state.MustSetWaiting(n)
 			r.logger.Debug("Waiting: %s", n)
 			namedTaskCh <- &namedTask{n, t}
 		}
@@ -183,29 +196,33 @@ func (r *Recipe) validator(resultCh <-chan *result, dispatchAgainCh chan<- bool,
 			dispatchAgainCh <- false
 			// Terminate
 			doneCh <- (*Error)(result)
-			break
+			goto save
 		}
 		r.logger.Debug("Success: %s", result.n)
 		if result.n == r.Main {
 			dispatchAgainCh <- false
 			doneCh <- nil
+			r.onSuccess(result.n)
+			r.state.Remove()
 			break
 		}
 	success:
 		r.onSuccess(result.n)
 		dispatchAgainCh <- true
+	save:
+		r.state.Save()
 	}
 	//r.logger.Debug("Stopping validator")
 }
 
 func (r *Recipe) onSuccess(name string) {
-	r.Tasks[name].MustSetSuccess()
+	r.state.MustSetSuccess(name)
 }
 
 func (r *Recipe) onFailure(name string) {
 	for n, t := range r.Tasks {
 		if n != name {
-			if t.IsRunning() {
+			if r.state.IsRunning(n) {
 				r.logger.Debug("Cancelling: %s", n)
 				err := t.Terminate()
 				if err != nil {
@@ -213,7 +230,7 @@ func (r *Recipe) onFailure(name string) {
 				}
 			}
 		} else {
-			t.MustSetFailure()
+			r.state.MustSetFailure(n)
 		}
 	}
 }
@@ -221,19 +238,19 @@ func (r *Recipe) onFailure(name string) {
 func (r *Recipe) readyTasks() *TaskIterator {
 	namedTasks := make([]*namedTask, 0)
 	for n, t := range r.Tasks {
-		if r.readyTask(t) {
+		if r.readyTask(n, t) {
 			namedTasks = append(namedTasks, &namedTask{n, t})
 		}
 	}
 	return &TaskIterator{namedTasks, -1}
 }
 
-func (r *Recipe) readyTask(t *Task) bool {
-	if !t.IsEnabled() {
+func (r *Recipe) readyTask(n string, t *Task) bool {
+	if !r.state.IsEnabled(n) {
 		return false
 	}
 	for _, d := range t.Deps {
-		if !r.Tasks[d].IsSuccess() {
+		if !r.state.IsSuccess(d) {
 			return false
 		}
 	}
@@ -253,24 +270,26 @@ func (r *Recipe) Interpreter() []string {
 }
 
 func (r *Recipe) String() string {
-	return r.string(false)
+	return r.serialize(false).String()
 }
 
 func (r *Recipe) PrettyString() string {
-	return r.string(true)
+	return r.serialize(true).String()
 }
 
-func (r *Recipe) string(indent bool) string {
+func (r *Recipe) serialize(indent bool) *bytes.Buffer {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
 	b := bytes.Buffer{}
 	e := json.NewEncoder(&b)
 	if indent {
-		e.SetIndent("", " ")
+		e.SetIndent("", "  ")
 	}
 	err := e.Encode(r)
 	if err != nil {
 		panic(err)
 	}
-	return b.String()
+	return &b
 }
 
 /*

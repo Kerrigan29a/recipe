@@ -47,13 +47,18 @@
     },
     "clean": {
       "deps": [
-        "clean_more"
+        "clean_binaries",
+        "clean_states"
       ],
       "cmd": "go clean -i",
     },
-    "clean_more": {
+    "clean_binaries": {
       "cmd": "rm recipe recipe.exe recipe.linux recipe.darwin",
       "allow_failure": true,
-    }
+    },
+    "clean_states": {
+      "cmd": "rm examples/*.state",
+      "allow_failure": true,
+    },
   }
 }
