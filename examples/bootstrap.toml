@@ -6,10 +6,11 @@ interp = ['bash', '-c', 'exec {cmd}']
 GOARCH = "amd64"
 
 [tasks.build_debug]
+deps = ['generate']
 cmd = 'go build -race -ldflags "-X main.version=`cat VERSION`+`date -u +%Y%m%d.%H%M%S`" ./cmd/recipe/'
 
 [tasks.build_release]
-deps = ['build_release_windows','build_release_darwin','build_release_linux']
+deps = ['generate', 'build_release_windows','build_release_darwin','build_release_linux']
 
 [tasks.build_release_darwin]
 env = {GOOS = 'darwin'}
@@ -22,6 +23,9 @@ cmd = 'go build -ldflags "-X main.version=`cat VERSION`+`date -u +%Y%m%d.%H%M%S`
 [tasks.build_release_windows]
 env = {GOOS = 'windows'}
 cmd = 'go build -ldflags "-X main.version=`cat VERSION`+`date -u +%Y%m%d.%H%M%S`" ./cmd/recipe/'
+
+[tasks.generate]
+cmd = 'go generate -x'
 
 [tasks.clean]
 deps = ['clean_more']

@@ -10,10 +10,14 @@
   ],
   "tasks": {
     "build_debug": {
+      "deps": [
+        "generate"
+      ],
       "cmd": "go build -race -ldflags \"-X main.version=`cat VERSION`+`date -u +%Y%m%d.%H%M%S`\" ./cmd/recipe/",
     },
     "build_release": {
       "deps": [
+        "generate",
         "build_release_windows",
         "build_release_darwin",
         "build_release_linux"
@@ -37,6 +41,9 @@
         "GOOS": "windows"
       },
       "cmd": "go build -ldflags \"-X main.version=`cat VERSION`+`date -u +%Y%m%d.%H%M%S`\" ./cmd/recipe/",
+    },
+    "generate": {
+      "cmd": "go generate -x",
     },
     "clean": {
       "deps": [
