@@ -1,0 +1,25 @@
+main = "t1"
+
+[tasks.t1]
+deps = ["t2", "t3",]
+cmd = 'echo All done!!!'
+stdout = ""
+stderr = ""
+
+[tasks.t2]
+interp = ['python', '-c', '{cmd}']
+cmd = '''
+import time
+for i in range(5):
+    time.sleep(0.5)
+    print '[t2] {}: hi world'.format(i)
+'''
+
+[tasks.t3]
+interp = ['python', '-c', '{cmd}']
+cmd = '''
+import time
+for i in range(10):
+    time.sleep(0.5)
+    print '[t3] {}: hi world'.format(i)
+'''
