@@ -33,7 +33,7 @@ type Task struct {
 /*
 
 // NOTE: This snippet shows how to reset unmarshaled structs to have different default values
-// WARNING: At this momment is not working with TOML due to a go-toml limitation: https://github.com/pelletier/go-toml/blob/master/marshal.go#L318
+// WARNING: At this moment is not working with TOML due to a go-toml limitation: https://github.com/pelletier/go-toml/blob/master/marshal.go#L318
 
 // Used to avoid recursion in UnmarshalJSON below.
 type task Task

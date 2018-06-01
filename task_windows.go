@@ -7,13 +7,12 @@
  * - https://github.com/alexbrainman/ps
  */
 
-
 package recipe
 
 import (
-	"syscall"
-	"os/exec"
 	"fmt"
+	"os/exec"
+	"syscall"
 )
 
 func (t *Task) composeDefaultInterpreterCmd(spell string) []string {

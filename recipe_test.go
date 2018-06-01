@@ -90,6 +90,10 @@ func testBasic(t *testing.T, txt, format string, logLevel LoggerLevel) {
 
 	/* Check tmp file */
 	data, err := ioutil.ReadFile(name)
+	if err != nil {
+		t.Errorf("Reading output: %s", err)
+		return
+	}
 	lines := strings.Split(string(data), "\n")
 	if !(len(lines) == 4 && lines[0] == "t3" && lines[1] == "t2" && lines[2] == "t1" && lines[3] == "") {
 		t.Errorf("Invalid data: %s", data)
@@ -228,6 +232,10 @@ func testCancel(t *testing.T, txt, format string, logLevel LoggerLevel) {
 
 	/* Check tmp file */
 	data, err := ioutil.ReadFile(name)
+	if err != nil {
+		t.Errorf("Reading output: %s", err)
+		return
+	}
 	lines := strings.Split(string(data), "\n")
 	if !(len(lines) == 2 && lines[0] == "t3" && lines[1] == "") {
 		t.Errorf("Invalid data: %s", data)
