@@ -1,0 +1,55 @@
+before:
+  hooks:
+  - go generate -x
+
+builds:
+  - main: cmd/recipe/main.go
+    binary: recipe
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+      # - freebsd
+      # - netbsd
+      # - openbsd
+    goarch:
+      - 386
+      - amd64
+      - arm
+      - arm64
+      - mips
+      - mipsle
+      - mips64
+      - mips64le
+    goarm:
+      - 6
+      - 7
+
+checksum:
+  name_template: '{{ .ProjectName }}_checksums.txt'
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - Merge pull request
+      - Merge branch
+      - Merge tag
+      - Releasing
+
+archive:
+  format: tgz
+  format_overrides:
+    - goos: windows
+      format: zip
+  replacements:
+    darwin: macosx
+    386: i386
+    amd64: x86_64
+  files:
+      - LICENSE.md
+      - README.md
+      - VERSION
+      - examples
