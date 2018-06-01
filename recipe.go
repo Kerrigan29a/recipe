@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"sync"
 
 	"github.com/DisposaBoy/JsonConfigReader"
@@ -33,7 +32,7 @@ type result struct {
 	e error
 }
 
-func Open(path string, logger *Logger) (*Recipe, error) {
+func Open(path string, recipeLogger, stateLogger *Logger) (*Recipe, error) {
 	var r Recipe
 	f, err := os.Open(path)
 	if err != nil {
@@ -59,11 +58,14 @@ func Open(path string, logger *Logger) (*Recipe, error) {
 
 	// NOTE: Create the rest of Recipe fields after the decoding step
 
-	/* Create state */
-	r.state = NewState(strings.Replace(path, ext, ".state", -1))
+	/* Open state */
+	r.state, err = OpenState(path+".state", stateLogger)
+	if err != nil {
+		return nil, err
+	}
 
 	/* Set logger */
-	r.logger = logger
+	r.logger = recipeLogger
 	r.logger.Debug("Recipe: %s", r.PrettyString())
 
 	/* Check the recipe */
@@ -111,8 +113,13 @@ func (r *Recipe) enableTasks(name string) error {
 	if !ok {
 		return fmt.Errorf("The task is not defined in the recipe: %s", name)
 	}
-	r.state.SetEnabled(name)
-	r.logger.Debug("Enabled: %s", name)
+	if !r.state.IsDone(name) {
+		r.state.SetDisabled(name)
+		r.state.MustSetEnabled(name)
+		r.logger.Debug("Enabled: %s", name)
+	} else {
+		r.logger.Debug("Not enabled: %s", name)
+	}
 	for _, n := range t.Deps {
 		err := r.enableTasks(n)
 		if err != nil {
@@ -189,6 +196,10 @@ func (r *Recipe) validator(resultCh <-chan *result, dispatchAgainCh chan<- bool,
 				r.logger.Info("Allowed Failure: %s", result.n)
 				goto success
 			}
+			if r.state.IsCancelled(result.n) {
+				r.logger.Debug("Cancellation confirmed: %s", result.n)
+				goto save
+			}
 			r.logger.Debug("Failure: %s", result.n)
 			// Cancel all the running tasks
 			r.onFailure(result.n)
@@ -200,16 +211,18 @@ func (r *Recipe) validator(resultCh <-chan *result, dispatchAgainCh chan<- bool,
 		}
 		r.logger.Debug("Success: %s", result.n)
 		if result.n == r.Main {
+			r.onSuccess(result.n)
+			/* Remove the state file if all the tasks have terminated correctly */
+			r.state.Remove()
 			dispatchAgainCh <- false
 			doneCh <- nil
-			r.onSuccess(result.n)
-			r.state.Remove()
 			break
 		}
 	success:
 		r.onSuccess(result.n)
 		dispatchAgainCh <- true
 	save:
+		/* Save the state after any terminated task */
 		r.state.Save()
 	}
 	//r.logger.Debug("Stopping validator")
@@ -223,7 +236,8 @@ func (r *Recipe) onFailure(name string) {
 	for n, t := range r.Tasks {
 		if n != name {
 			if r.state.IsRunning(n) {
-				r.logger.Debug("Cancelling: %s", n)
+				r.logger.Debug("Cancellation requested: %s", n)
+				r.state.MustSetCancelled(n)
 				err := t.Terminate()
 				if err != nil {
 					r.logger.Error("Unable to terminate '%s': %s", n, err.Error())
@@ -239,6 +253,7 @@ func (r *Recipe) readyTasks() *TaskIterator {
 	namedTasks := make([]*namedTask, 0)
 	for n, t := range r.Tasks {
 		if r.readyTask(n, t) {
+			r.logger.Debug("Ready: %s", n)
 			namedTasks = append(namedTasks, &namedTask{n, t})
 		}
 	}

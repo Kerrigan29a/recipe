@@ -3,9 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/Kerrigan29a/recipe"
 	"os"
 	"runtime"
+
+	"github.com/Kerrigan29a/recipe"
 )
 
 var version string
@@ -53,9 +54,11 @@ func main() {
 	logger.Level = level
 	recipeLogger := recipe.NewLogger("[Recipe] ")
 	recipeLogger.Level = level
+	stateLogger := recipe.NewLogger("[State ] ")
+	stateLogger.Level = level
 	logger.Info("Version: %s", version)
 	for _, path := range paths {
-		recipe, err := recipe.Open(path, recipeLogger)
+		recipe, err := recipe.Open(path, recipeLogger, stateLogger)
 		if err != nil {
 			logger.Fatal(err)
 		}

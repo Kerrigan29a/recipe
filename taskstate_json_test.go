@@ -28,6 +28,7 @@ func TestTaskState_EncodeAndDecode(t *testing.T) {
 	_testEncodeAndDecode(t, Enabled)
 	_testEncodeAndDecode(t, Waiting)
 	_testEncodeAndDecode(t, Running)
+	_testEncodeAndDecode(t, Cancelled)
 	_testEncodeAndDecode(t, Success)
 	_testEncodeAndDecode(t, Failure)
 }

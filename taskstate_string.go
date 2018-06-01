@@ -4,9 +4,9 @@ package recipe
 
 import "strconv"
 
-const _TaskState_name = "DisabledEnabledWaitingRunningSuccessFailure"
+const _TaskState_name = "DisabledEnabledWaitingRunningCancelledSuccessFailure"
 
-var _TaskState_index = [...]uint8{0, 8, 15, 22, 29, 36, 43}
+var _TaskState_index = [...]uint8{0, 8, 15, 22, 29, 38, 45, 52}
 
 func (i TaskState) String() string {
 	if i < 0 || i >= TaskState(len(_TaskState_index)-1) {

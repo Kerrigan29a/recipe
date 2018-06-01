@@ -9,6 +9,8 @@ import (
 	"io/ioutil"
 	"os"
 	"sync"
+
+	"github.com/DisposaBoy/JsonConfigReader"
 )
 
 /*
@@ -23,6 +25,7 @@ const (
 	Enabled
 	Waiting
 	Running
+	Cancelled
 	Success
 	Failure
 )
@@ -30,23 +33,50 @@ const (
 type State struct {
 	States map[string]TaskState `json:"states" toml:"states"`
 	path   string
+	logger *Logger
 	mu     sync.RWMutex
 }
 
-func NewState(path string) *State {
-	return &State{
-		States: make(map[string]TaskState),
-		path:   path,
+func OpenState(path string, logger *Logger) (*State, error) {
+	var s State
+
+	/* Try to open file */
+	f, err := os.Open(path)
+	if err != nil {
+		/* If is not possible, create and empty struct */
+		s = State{
+			States: make(map[string]TaskState),
+		}
+		logger.Info("Creating state file: %s", path)
+	} else {
+		err = json.NewDecoder(JsonConfigReader.New(f)).Decode(&s)
+		if err != nil {
+			return nil, fmt.Errorf("(%s) %s", path, err.Error())
+		}
+		logger.Info("Loading state file: %s", path)
 	}
+	s.path = path
+	s.logger = logger
+	return &s, nil
 }
 
 func (s *State) Save() error {
 	b := s.serialize(true)
-	return ioutil.WriteFile(s.path, b.Bytes(), 0644)
+	err := ioutil.WriteFile(s.path, b.Bytes(), 0644)
+	if err != nil {
+		return err
+	}
+	s.logger.Debug("Saving state file: %s", s.path)
+	return nil
 }
 
 func (s *State) Remove() error {
-	return os.Remove(s.path)
+	err := os.Remove(s.path)
+	if err != nil {
+		return err
+	}
+	s.logger.Info("Removing state file: %s", s.path)
+	return nil
 }
 
 func (s *State) String() string {
@@ -82,7 +112,7 @@ func (s *State) SetEnabled(taskName string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.States[taskName] != Disabled {
-		return fmt.Errorf("Current state must be Disabled, not %d", s.States[taskName])
+		return fmt.Errorf("Current state must be Disabled, not %s", s.States[taskName])
 	}
 	s.States[taskName] = Enabled
 	return nil
@@ -105,7 +135,7 @@ func (s *State) MustSetWaiting(taskName string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.States[taskName] != Enabled {
-		panic(fmt.Errorf("Current state must be Enabled, not %d", s.States[taskName]))
+		panic(fmt.Errorf("Current state must be Enabled, not %s", s.States[taskName]))
 	}
 	s.States[taskName] = Waiting
 }
@@ -120,7 +150,7 @@ func (s *State) MustSetRunning(taskName string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.States[taskName] != Waiting {
-		panic(fmt.Errorf("Current state must be Waiting, not %d", s.States[taskName]))
+		panic(fmt.Errorf("Current state must be Waiting, not %s", s.States[taskName]))
 	}
 	s.States[taskName] = Running
 }
@@ -131,11 +161,26 @@ func (s *State) IsRunning(taskName string) bool {
 	return s.States[taskName] == Running
 }
 
+func (s *State) MustSetCancelled(taskName string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.States[taskName] != Running {
+		panic(fmt.Errorf("Current state must be Running, not %s", s.States[taskName]))
+	}
+	s.States[taskName] = Cancelled
+}
+
+func (s *State) IsCancelled(taskName string) bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.States[taskName] == Cancelled
+}
+
 func (s *State) MustSetSuccess(taskName string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.States[taskName] != Running {
-		panic(fmt.Errorf("Current state must be Running, not %d", s.States[taskName]))
+		panic(fmt.Errorf("Current state must be Running, not %s", s.States[taskName]))
 	}
 	s.States[taskName] = Success
 }
@@ -150,7 +195,7 @@ func (s *State) MustSetFailure(taskName string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.States[taskName] != Running {
-		panic(fmt.Errorf("Current state must be Running, not %d", s.States[taskName]))
+		panic(fmt.Errorf("Current state must be Running, not %s", s.States[taskName]))
 	}
 	s.States[taskName] = Failure
 }
@@ -159,4 +204,10 @@ func (s *State) IsFailure(taskName string) bool {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	return s.States[taskName] == Failure
+}
+
+func (s *State) IsDone(taskName string) bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.States[taskName] == Failure || s.States[taskName] == Success
 }
