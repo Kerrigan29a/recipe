@@ -60,16 +60,12 @@ func TestRecipe_basic_JSON(t *testing.T) {
 
 func testBasic(t *testing.T, txt, format string, logLevel LoggerLevel) {
 	/* Create tmp file */
-	f, err := ioutil.TempFile("", "recipe_output_")
-	if err != nil {
-		t.Errorf("Creating tmp file: %s", err)
-		return
-	}
-	f.Close()
-	defer os.Remove(f.Name())
+	name := "basic_output.txt"
+	defer os.Remove(name)
 
 	/* Create recipe with tmp file */
-	txt = fmt.Sprintf(txt, f.Name())
+	txt = fmt.Sprintf(txt, name)
+	fmt.Printf("txt = <<<%s>>>\n", txt)
 	path, err := TmpRecipe(format, txt)
 	if err != nil {
 		t.Errorf("Writing recipe: %s", err)
@@ -93,7 +89,7 @@ func testBasic(t *testing.T, txt, format string, logLevel LoggerLevel) {
 	}
 
 	/* Check tmp file */
-	data, err := ioutil.ReadFile(f.Name())
+	data, err := ioutil.ReadFile(name)
 	lines := strings.Split(string(data), "\n")
 	if !(len(lines) == 4 && lines[0] == "t3" && lines[1] == "t2" && lines[2] == "t1" && lines[3] == "") {
 		t.Errorf("Invalid data: %s", data)
@@ -200,16 +196,11 @@ func TestRecipe_cancelRunning_JSON(t *testing.T) {
 
 func testCancel(t *testing.T, txt, format string, logLevel LoggerLevel) {
 	/* Create tmp file */
-	f, err := ioutil.TempFile("", "recipe_output_")
-	if err != nil {
-		t.Errorf("Creating tmp file: %s", err)
-		return
-	}
-	f.Close()
-	defer os.Remove(f.Name())
+	name := "cancel_output.txt"
+	defer os.Remove(name)
 
 	/* Create recipe with tmp file */
-	txt = fmt.Sprintf(txt, f.Name())
+	txt = fmt.Sprintf(txt, name)
 	path, err := TmpRecipe(format, txt)
 	if err != nil {
 		t.Errorf("Writing recipe: %s", err)
@@ -236,14 +227,14 @@ func testCancel(t *testing.T, txt, format string, logLevel LoggerLevel) {
 	}
 
 	/* Check tmp file */
-	data, err := ioutil.ReadFile(f.Name())
+	data, err := ioutil.ReadFile(name)
 	lines := strings.Split(string(data), "\n")
 	if !(len(lines) == 2 && lines[0] == "t3" && lines[1] == "") {
 		t.Errorf("Invalid data: %s", data)
 	}
 
 	/* Check state */
-	if !(r.state.IsEnabled("t1") && r.state.IsFailure("t2") && (r.state.IsSuccess("t3") || r.state.IsRunning("t3"))) {
+	if !(r.state.IsEnabled("t1") && r.state.IsFailure("t2") && (r.state.IsSuccess("t3") || r.state.IsCancelled("t3"))) {
 		t.Errorf("Wrong state: %v", r.state.String())
 		return
 	}

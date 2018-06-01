@@ -192,12 +192,13 @@ func (r *Recipe) validator(resultCh <-chan *result, dispatchAgainCh chan<- bool,
 	for {
 		result := <-resultCh
 		if result.e != nil {
-			if IsSyscallKill(result.e) {
-				r.logger.Debug("Cancellation confirmed: %s", result.n)
-			}
 			if r.Tasks[result.n].AllowFailure {
 				r.logger.Info("Allowed Failure: %s", result.n)
 				goto success
+			}
+			if r.state.IsCancelled(result.n) {
+				r.logger.Debug("Cancellation confirmed: %s", result.n)
+				goto save
 			}
 			r.logger.Debug("Failure: %s", result.n)
 			// Cancel all the running tasks
@@ -243,11 +244,6 @@ func (r *Recipe) onFailure(name string) {
 				}
 			}
 		} else {
-			/*if !r.state.IsCancelled(n) {
-				r.state.MustSetFailure(n)
-			} else {
-				r.logger.Debug("Already cancelled: %s", n)
-			}*/
 			r.state.MustSetFailure(n)
 		}
 	}
