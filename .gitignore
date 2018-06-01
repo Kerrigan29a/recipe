@@ -7,8 +7,15 @@
 # Test binary, build with `go test -c`
 *.test
 
-# PyCharm
+# Goreleaser folder
+dist/
+
+# Editors and IDEs
 .idea/
+.vscode/
+
+# Mac files
+.DS_Store
 
 # State files
 *.state
