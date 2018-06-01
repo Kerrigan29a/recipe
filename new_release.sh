@@ -22,7 +22,7 @@ do
     echo "********************************************************************************"
     echo "Patching $file"
     echo "********************************************************************************"
-    sed -i "s/$CURRENT_VERSION/$NEW_VERSION/g" $file
+    sed -i -e "s/$CURRENT_VERSION/$NEW_VERSION/g" $file
     git add $file
 done
 
