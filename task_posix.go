@@ -9,8 +9,8 @@
 package recipe
 
 import (
-	"syscall"
 	"os"
+	"syscall"
 )
 
 func (t *Task) composeDefaultInterpreterCmd(spell string) []string {
@@ -49,5 +49,7 @@ func (t *Task) Terminate() error {
 	if err != nil {
 		return err
 	}
-	return target.Signal(syscall.SIGHUP)
+	//return target.Signal(syscall.SIGHUP)
+	return target.Signal(syscall.SIGKILL)
+	//return target.Kill()
 }

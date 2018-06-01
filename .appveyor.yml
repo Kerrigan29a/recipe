@@ -19,4 +19,5 @@ build_script:
   - go run cmd/recipe/main.go -v -m build_release examples/bootstrap.toml
 
 test_script:
+  - go test
   - go run cmd/recipe/main.go -v -w 1 examples/all_tests.toml

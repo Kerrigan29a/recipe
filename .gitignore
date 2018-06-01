@@ -9,3 +9,6 @@
 
 # PyCharm
 .idea/
+
+# State files
+*.state
