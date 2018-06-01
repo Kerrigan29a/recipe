@@ -112,7 +112,7 @@ func (s *State) SetEnabled(taskName string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.States[taskName] != Disabled {
-		return fmt.Errorf("Current state must be Disabled, not %s", s.States[taskName])
+		return fmt.Errorf("Current state must be Disabled, not %s", s.States[taskName].String())
 	}
 	s.States[taskName] = Enabled
 	return nil
@@ -135,7 +135,7 @@ func (s *State) MustSetWaiting(taskName string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.States[taskName] != Enabled {
-		panic(fmt.Errorf("Current state must be Enabled, not %s", s.States[taskName]))
+		panic(fmt.Errorf("Current state must be Enabled, not %s", s.States[taskName].String()))
 	}
 	s.States[taskName] = Waiting
 }
@@ -150,7 +150,7 @@ func (s *State) MustSetRunning(taskName string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.States[taskName] != Waiting {
-		panic(fmt.Errorf("Current state must be Waiting, not %s", s.States[taskName]))
+		panic(fmt.Errorf("Current state must be Waiting, not %s", s.States[taskName].String()))
 	}
 	s.States[taskName] = Running
 }
@@ -165,7 +165,7 @@ func (s *State) MustSetCancelled(taskName string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.States[taskName] != Running {
-		panic(fmt.Errorf("Current state must be Running, not %s", s.States[taskName]))
+		panic(fmt.Errorf("Current state must be Running, not %s", s.States[taskName].String()))
 	}
 	s.States[taskName] = Cancelled
 }
@@ -180,7 +180,7 @@ func (s *State) MustSetSuccess(taskName string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.States[taskName] != Running {
-		panic(fmt.Errorf("Current state must be Running, not %s", s.States[taskName]))
+		panic(fmt.Errorf("Current state must be Running, not %s", s.States[taskName].String()))
 	}
 	s.States[taskName] = Success
 }
@@ -195,7 +195,7 @@ func (s *State) MustSetFailure(taskName string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.States[taskName] != Running {
-		panic(fmt.Errorf("Current state must be Running, not %s", s.States[taskName]))
+		panic(fmt.Errorf("Current state must be Running, not %s", s.States[taskName].String()))
 	}
 	s.States[taskName] = Failure
 }

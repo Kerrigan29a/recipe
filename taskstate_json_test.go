@@ -21,7 +21,7 @@ func TestTaskState_EncodeAndDecode(t *testing.T) {
 		}
 
 		if original != obtained {
-			t.Errorf("Error testing %s", original)
+			t.Errorf("Error testing %s", original.String())
 		}
 	}
 	_testEncodeAndDecode(t, Disabled)
