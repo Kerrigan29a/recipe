@@ -1,5 +1,5 @@
 #!/bin/bash
-# nothing to see here, just a utility i use to create new releases
+# Nothing to see here, just a utility I use to create new releases
 
 CURRENT_VERSION=$(cat VERSION)
 TO_UPDATE=(
@@ -22,7 +22,11 @@ do
     echo "********************************************************************************"
     echo "Patching $file"
     echo "********************************************************************************"
-    sed -i -e "s/$CURRENT_VERSION/$NEW_VERSION/g" $file
+    if [[ $(uname) == 'Darwin' ]]; then
+        sed -i "" -e "s/$CURRENT_VERSION/$NEW_VERSION/g" $file
+    else
+        sed -i -e "s/$CURRENT_VERSION/$NEW_VERSION/g" $file
+    fi
     git add $file
 done
 
